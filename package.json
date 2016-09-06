@@ -1,0 +1,17 @@
+{
+  "name": "tvstreamer",
+  "version": "1.0.0",
+  "description": "TV Streamer",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ken107/tvstreamer.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ken107/tvstreamer/issues"
+  },
+  "homepage": "https://github.com/ken107/tvstreamer#readme",
+  "dependencies": {
+    "fifo": "^2.3.0"
+  }
+}
