@@ -11,6 +11,11 @@ function init() {
   var file = "a.m3u8";
   fs.watchFile(folder+file, {interval: 1007}, (stat, prev) => {
     if (stat.mtime.getTime() == prev.mtime.getTime()) return;
+    if (uploader.queue.length > 15) {
+      console.log("Queue too long, starting over");
+      uploader.queue = [];
+      lastModified = {};
+    }
     fs.readFile(folder+file, "utf8", (err, data) => {
       if (err) throw err;
       parsePlaylist(file, data);
@@ -50,7 +55,6 @@ function Uploader() {
   this.active = false;
 
   this.add = function(file, data) {
-    if (this.queue.length > 15) throw new Error("Overflow");
     this.queue.push({file: file, data: data});
     if (!this.active) {
       this.active = true;
@@ -64,15 +68,15 @@ function Uploader() {
       return;
     }
     var item = this.queue.shift();
-    var file = item.file;
-    var data = item.data;
-    if (data) this.upload(file, data.length, data);
-    else {
-      fs.stat(folder+file, (err, stat) => {
-        if (err) throw err;
-        this.upload(file, stat.size, fs.createReadStream(folder+file));
-      });
-    }
+    if (item.data) this.upload(item.file, item.data.length, item.data);
+    else this.statAndUpload(item.file);
+  };
+
+  this.statAndUpload = function(file) {
+    fs.stat(folder+file, (err, stat) => {
+      if (err) throw err;
+      this.upload(file, stat.size, fs.createReadStream(folder+file));
+    });
   };
 
   this.upload = function(file, size, data) {
@@ -89,6 +93,12 @@ function Uploader() {
       console.log(file, "-", res.statusCode, res.statusMessage);
       process.stdout.write(this.queue.length + " \r");
       this.uploadNext();
+    });
+    req.on("error", err => {
+      console.log(file, "-", err);
+      process.stdout.write(this.queue.length + " \r");
+      if (data instanceof stream.Readable) setTimeout(() => this.statAndUpload(file), 5000);
+      else setTimeout(() => this.upload(file, size, data), 5000);
     });
     if (data instanceof stream.Readable) data.pipe(req);
     else req.end(data);
