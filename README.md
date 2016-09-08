@@ -14,4 +14,4 @@
 ### Run
 1. sh capture.sh [channel-name]
 2. sh transcode.sh
-3. node uploader.js
+3. node uploader.js [playlist-name] ...

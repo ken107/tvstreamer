@@ -5,10 +5,9 @@ var lastModified = {};
 var uploader = new Uploader();
 var folder = "media/";
 
-init();
+process.argv.slice(2).forEach(arg => init(arg + ".m3u8"));
 
-function init() {
-  var file = "a.m3u8";
+function init(file) {
   fs.watchFile(folder+file, {interval: 1007}, (stat, prev) => {
     if (stat.mtime.getTime() == prev.mtime.getTime()) return;
     if (uploader.queue.length > 15) {
