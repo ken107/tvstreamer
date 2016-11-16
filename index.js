@@ -1,8 +1,10 @@
 
 var express = require("express");
+var cors = require("cors");
 var app = express();
+app.use(cors());
 app.get("/data", (req, res) => res.json(data));
-app.listen(30111);
+app.listen(30111, () => console.log("Listening on 30111"));
 
 var sources = {
 	vtv: require("./scraper/vtv.js")
