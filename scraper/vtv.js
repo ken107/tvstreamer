@@ -16,31 +16,22 @@ function scrape(index) {
 		(err, res) => {
 			if (err) reject(err);
 			else if (res.statusCode != 302) reject(`Expect 302 but get ${res.statusCode}`);
-			else fulfill(res.headers['location']);
+			else fulfill({
+				name: `VTV${index}`,
+				m3u8: res.headers['location']
+			});
 		});
 	});
 }
 
 exports.scrape = function() {
 	var data = [];
-	var push = result => data.push(result);
-	return
-		scrape(i).then(result => {
-			data.push({
-				name: `VTV${i}`,
-				m3u8: result
-			});
-
-		});
-		.then(() => scrape(2)).then(push)
-		.then(() => scrape(3)).then(push)
-		.then(() => scrape(4)).then(push)
-		.then(() => scrape(5)).then(push)
-		.then(() => scrape(6)).then(push)
-		.then(() => scrape(7)).then(push)
-		.then(() => scrape(8)).then(push)
-		.then(() => scrape(9)).then(push)
-		.then(() => data);
+	var i = 0;
+	return next();
+	function next() {
+		if (++i > 9) return Promise.resolve(data);
+		else return scrape(i).then(result => data.push(result)).then(next);
+	}
 }
 
 exports.updateInterval = 3*60*1000;
