@@ -4,7 +4,6 @@ var helper = require("../util/helper.js");
 //request.debug = true;
 
 var masterUrls = {};
-var pending = {};
 
 exports.getPlaylist = function(channel, playlist, res) {
 	return getMasterUrl(channel)
@@ -13,11 +12,6 @@ exports.getPlaylist = function(channel, playlist, res) {
 			else return download(require("url").resolve(masterUrl, playlist + ".m3u8"));
 		})
 		.then(content => res.send(content));
-}
-
-exports.getStream = function(channel, stream, res) {
-	return getMasterUrl(channel)
-		.then(masterUrl => res.redirect(302, require("url").resolve(masterUrl, stream + ".ts")));
 }
 
 function getMasterUrl(channel) {
@@ -52,16 +46,7 @@ function scrapeMasterUrl(channel) {
 	});
 }
 
-function download(url) {
-	if (pending[url]) return pending[url];
-	return pending[url] = load(url)
-		.then(result => {
-			delete pending[url];
-			return result;
-		})
-}
-
-function load(url) {
+var download = helper.dedupe(function(url) {
 	console.log(helper.time(), "load", url);
 	return new Promise(function(fulfill, reject) {
 		request({
@@ -75,7 +60,16 @@ function load(url) {
 		(err, res, body) => {
 			if (err) reject(err);
 			else if (res.statusCode != 200) reject(`HTTP ${res.statusCode}`);
-			else fulfill(body);
+			else fulfill(resolveRelativeStreamUrls(body, url));
 		});
 	})
+});
+
+function resolveRelativeStreamUrls(body, baseUrl) {
+	return body.split(/\r?\n/).map(line => {
+		line = line.trim();
+		if (!/^#/.test(line) && /\.ts$/.test(line)) return require("url").resolve(baseUrl, line);
+		else return line;
+	})
+	.join("\r\n");
 }
