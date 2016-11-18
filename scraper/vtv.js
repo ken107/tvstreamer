@@ -46,7 +46,7 @@ function scrapeMasterUrl(channel) {
 	});
 }
 
-var download = helper.dedupe(function(url) {
+var download = helper.dedupe(helper.cache(1000, function(url) {
 	console.log(helper.time(), "load", url);
 	return new Promise(function(fulfill, reject) {
 		request({
@@ -63,7 +63,7 @@ var download = helper.dedupe(function(url) {
 			else fulfill(resolveRelativeStreamUrls(body, url));
 		});
 	})
-});
+}));
 
 function resolveRelativeStreamUrls(body, baseUrl) {
 	return body.split(/\r?\n/).map(line => {

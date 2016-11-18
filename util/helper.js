@@ -16,3 +16,15 @@ exports.dedupe = function(loadFunc) {
         });
   };
 };
+
+exports.cache = function(expire, loadFunc) {
+	var cache = {};
+	return function(uri) {
+		if (cache[uri] && cache[uri].time + expire > new Date().getTime()) return Promise.resolve(cache[uri].data);
+		return loadFunc(uri)
+			.then(result => {
+				cache[uri] = {data: result, time: new Date().getTime()};
+				return result;
+			});
+	};
+};
