@@ -4,7 +4,7 @@ var helper = require("../util/helper.js");
 
 var masterUrls = {};
 
-exports.getPlaylist = function(channel, playlist, res) {
+exports.getPlaylist = function(channel, playlist, query, res) {
 	return getMasterUrl(channel)
 		.then(masterUrl => {
 			if (playlist == "master.m3u8") return downloadPlaylist(masterUrl);

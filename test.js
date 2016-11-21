@@ -1,7 +1,7 @@
 
 var helper = require("./util/helper");
 
-require("./scraper/fptplay.js").getPlaylist("htvc-thuan-viet-hd", "master.m3u8", {send: onMaster}).catch(console.log);
+require("./scraper/fptplay.js").getPlaylist("vtc5", "master.m3u8", {send: console.log}).catch(console.log);
 
 function onMaster(content) {
   var lines = helper.splitLines(content);

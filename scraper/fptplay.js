@@ -4,13 +4,24 @@ var helper = require("../util/helper.js");
 
 var masterUrls = {};
 
-exports.getPlaylist = function(channel, playlist, res) {
+exports.getPlaylist = function(channel, playlist, query, res) {
 	return getMasterUrl(channel)
 		.then(masterUrl => {
-			if (playlist == "master.m3u8") return downloadPlaylist(masterUrl, channel);
+			if (playlist == "master.m3u8") return downloadPlaylist(masterUrl, channel).then(content => {
+				console.log(content);
+				return content;
+			});
+			else if (playlist == "proxy") {
+				var data = JSON.parse(helper.fromBase64(query.data));
+				return helper.download(data.url, data.headers);
+			}
 			else {
-				var url = require("url").resolve(masterUrl, playlist);
+				var url = require("url").resolve(masterUrl, playlist + "?" + require("querystring").stringify(query));
 				return downloadPlaylist(url, channel)
+				.then(content => {
+					console.log(content);
+					return content;
+				})
 					.then(helper.splitLines)
 					.then(lines => lines.map(line => !line || line.startsWith("#") ? line : require("url").resolve(url, line)))
 					.then(lines => lines.map(line => interceptKeyFileUri(line, channel)))
@@ -34,6 +45,7 @@ function getMasterUrl(channel) {
 }
 
 function scrapeMasterUrl(channel) {
+	//return Promise.resolve(`https://livecdn.fptplay.net/liver/${channel}_hls.smil/playlist.m3u8?token=eyJzZXJ2ZXJfdGltZSI6IDE0Nzk3Njk1NTksICJyZXNvdXJjZV9pZCI6ICJ2dGMxX2hscyIsICJwYXJ0bmVyX2lkIjogIjU3MTNiZThjMDdlNDJlZDRiOTE2Mzg4ZSIsICJ0b2tlbiI6ICI1M2NmOWM3NGExYmI4ZTIwZDk1NWM4OTNjODZjZGM3ZiIsICJ2YWxpZF9taW51dGVzIjogMTQ3OTg1NTk1OSwgInJtaXAiOiAiNzQuNjIuMy4xNDgifQ%3D%3D`);
 	return new Promise(function(fulfill, reject) {
 		request.post({
 			url: "https://fptplay.net/show/getlinklivetv",
